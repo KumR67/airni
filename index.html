@@ -26,13 +26,8 @@ import requests
 import pandas as pd
 import micropip
 
-async def install_requests():
-  await micropip.install("requests")
-
-         
 # Installer le module requests
-await micropip.install("requests")
-import requests
+micropip.install("requests").then(lambda _: {
          
 # Liste des années à rechercher
 annees = [2019, 2020, 2021, 2022]
@@ -116,6 +111,9 @@ resultat = df_articles.merge(df_communications, on='Annee').merge(df_articles_av
 
 # Afficher le résultat
 resultat
+}).catch(lambda err: {
+  console.error(f"Une erreur s'est produite lors de l'installation de requests : {err}")
+})
        </py-script>
 
   </body>
