@@ -26,6 +26,10 @@ import requests
 import pandas as pd
 import micropip
 
+async def install_requests():
+  await micropip.install("requests")
+
+         
 # Installer le module requests
 await micropip.install("requests")
 import requests
