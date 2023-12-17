@@ -22,16 +22,92 @@
 </head>
 <body>
        <py-script>
-def wallis(n):
-    pi = 2
-    for i in range(1,n):
-        pi *= 4 * i ** 2 / (4 * i ** 2 - 1)
-    return pi
+import requests
+import pandas as pd
 
-pi = wallis(100000)
-s = f"π est approximativement {pi:.3f}"
-print(s)
-        </py-script>
+# Liste des années à rechercher
+annees = [2019, 2020, 2021, 2022]
+
+# Dictionnaires pour stocker les résultats
+nombre_articles_par_annee = {}
+nombre_communications_par_annee = {}
+nombre_articles_avec_doi_par_annee = {}
+nombre_communications_avec_doi_par_annee = {}
+
+# Paramètres de la requête pour les articles
+params_articles = {
+    'wt': 'json',
+    'fl': 'uri_s,producedDateY_i,docType_s',
+    'fq': 'docType_s:ART'
+}
+
+# Paramètres de la requête pour les communications
+params_communications = {
+    'wt': 'json',
+    'fl': 'uri_s,producedDateY_i,docType_s',
+    'fq': 'docType_s:COMM'
+}
+
+# Paramètres de la requête pour les articles avec DOI
+params_articles_avec_doi = {
+    'wt': 'json',
+    'fl': 'uri_s,producedDateY_i,docType_s,doiId_s',
+    'fq': 'docType_s:ART'
+}
+
+# Paramètres de la requête pour les communications avec DOI
+params_communications_avec_doi = {
+    'wt': 'json',
+    'fl': 'uri_s,producedDateY_i,docType_s,doiId_s',
+    'fq': 'docType_s:COMM'
+}
+
+# URL de la requête
+url = "https://api.archives-ouvertes.fr/search/"
+
+for annee in annees:
+    # Modifier les requêtes pour l'année en cours
+    params_articles['q'] = f'producedDateY_i:{annee} AND collCode_s:INRIA2'
+    params_communications['q'] = f'producedDateY_i:{annee} AND collCode_s:INRIA2'
+    params_articles_avec_doi['q'] = f'doiId_s:* AND producedDateY_i:{annee} AND collCode_s:INRIA2'
+    params_communications_avec_doi['q'] = f'doiId_s:* AND producedDateY_i:{annee} AND collCode_s:INRIA2'
+    
+    # Faire les requêtes pour chaque catégorie
+    response_articles = requests.get(url, params=params_articles)
+    response_communications = requests.get(url, params=params_communications)
+    response_articles_avec_doi = requests.get(url, params=params_articles_avec_doi)
+    response_communications_avec_doi = requests.get(url, params=params_communications_avec_doi)
+    
+    # Vérifier si les requêtes ont réussi
+    if response_articles.status_code == 200:
+        data_articles = response_articles.json()
+        nombre_articles = data_articles['response']['numFound']
+        nombre_articles_par_annee[annee] = nombre_articles
+    if response_communications.status_code == 200:
+        data_communications = response_communications.json()
+        nombre_communications = data_communications['response']['numFound']
+        nombre_communications_par_annee[annee] = nombre_communications
+    if response_articles_avec_doi.status_code == 200:
+        data_articles_avec_doi = response_articles_avec_doi.json()
+        nombre_articles_avec_doi = data_articles_avec_doi['response']['numFound']
+        nombre_articles_avec_doi_par_annee[annee] = nombre_articles_avec_doi
+    if response_communications_avec_doi.status_code == 200:
+        data_communications_avec_doi = response_communications_avec_doi.json()
+        nombre_communications_avec_doi = data_communications_avec_doi['response']['numFound']
+        nombre_communications_avec_doi_par_annee[annee] = nombre_communications_avec_doi
+
+# Créer des DataFrames pour les résultats
+df_articles = pd.DataFrame(list(nombre_articles_par_annee.items()), columns=['Annee', 'Nombre_Articles'])
+df_communications = pd.DataFrame(list(nombre_communications_par_annee.items()), columns=['Annee', 'Nombre_Communications'])
+df_articles_avec_doi = pd.DataFrame(list(nombre_articles_avec_doi_par_annee.items()), columns=['Annee', 'Nombre_Articles_Avec_DOI'])
+df_communications_avec_doi = pd.DataFrame(list(nombre_communications_avec_doi_par_annee.items()), columns=['Annee', 'Nombre_Communications_Avec_DOI'])
+
+# Fusionner les DataFrames
+resultat = df_articles.merge(df_communications, on='Annee').merge(df_articles_avec_doi, on='Annee').merge(df_communications_avec_doi, on='Annee')
+
+# Afficher le résultat
+resultat
+       </py-script>
 
   </body>
 </html>
