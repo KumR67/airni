@@ -24,7 +24,12 @@
        <py-script>
 import requests
 import pandas as pd
+import micropip
 
+# Installer le module requests
+await micropip.install("requests")
+import requests
+         
 # Liste des années à rechercher
 annees = [2019, 2020, 2021, 2022]
 
